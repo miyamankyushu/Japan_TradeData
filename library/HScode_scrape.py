@@ -10,6 +10,7 @@ from io import StringIO
 
 def generate_customs_urls(year, month, No_range):
     urls = []
+    print(1)
     for No in No_range:
         print(No)
         # 77類は存在しないのでスキップ
