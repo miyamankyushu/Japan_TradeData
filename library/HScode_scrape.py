@@ -51,7 +51,11 @@ def scrape_and_process_data(url):
         data.append(cols)
     # データをDataFrameに変換
     df = pd.DataFrame([row[:5] for row in data[5:]], columns=['HSコード_大', 'HSコード_小', '品名', '単位1', '単位2'])
-    burui_master = pd.read_csv('s3://project-opendata/01_貿易統計/01_import/HScode/HSコードマスタ_部類.csv')
+    # 相対パスで部類マスタCSVを取得
+    base_dir = os.path.dirname(__file__)
+    csv_path = os.path.abspath(os.path.join(base_dir, '..', 'reference_master', 'HS_master', 'HSコードマスタ_部類.csv'))
+    # 読み込み
+    burui_master = pd.read_csv(csv_path)
     burui_master['番号']=burui_master['類数'].str.replace(r'^第(\d+)類$', lambda x: '{:02d}'.format(int(x.group(1))), regex=True)
     temp = burui_master[burui_master['番号'] == url[-6:][:2]].reset_index(drop=True)
     df['部数'], df['部名'] = temp['部数'][0], temp['部名'][0]
@@ -295,7 +299,6 @@ def small_sp(df_without_unit2_small,df_without_unit2):
     return df_without_unit2_small,df_without_unit2_small_sp
 
 def med_sp(df_without_unit2_med,df_without_unit2):
-    print('med発生')
     # 'HSコード'をキーにして重複を判定し、重複している行を抽出
     duplicated_med = df_without_unit2_med[df_without_unit2_med.duplicated(subset='HSコード', keep=False)]
     # 重複していない行を抽出
@@ -305,7 +308,6 @@ def med_sp(df_without_unit2_med,df_without_unit2):
     df_without_unit2_med_sp['HSコード'] = df_without_unit2_med_sp['HSコード_new'].astype(str).str[:5]
     df_without_unit2_med_sp=df_without_unit2_med_sp.merge(duplicated_med[['HSコード', '中項目']], on=['HSコード', '中項目'], how='inner')[['HSコード_new','中項目']]
     df_without_unit2_med_sp['HSコード_new']=df_without_unit2_med_sp['HSコード_new'].astype(str).str[:6]
-    print(df_without_unit2_med_sp)
     return df_without_unit2_med,df_without_unit2_med_sp
 
 # 関数を定義して項目を追加
@@ -324,7 +326,6 @@ def add_flg(df_subset):
 def fetch_and_concat_data(urls):
     dfs = []
     for url in urls:
-        print(url)
         if url.endswith('80.htm'):
             df = HS_code_master_80(url)
         elif url.endswith('72.htm'):
