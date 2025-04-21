@@ -11,6 +11,7 @@ from io import StringIO
 def generate_customs_urls(year, month, No_range):
     urls = []
     for No in No_range:
+        print(No)
         # 77類は存在しないのでスキップ
         if No == 77:
             continue
@@ -34,7 +35,7 @@ def generate_customs_urls(year, month, No_range):
             raise ValueError('2010年度未満は未対応です')
             break
         urls.append(url)
-        return urls
+    return urls
 
 
 def scrape_and_process_data(url):
