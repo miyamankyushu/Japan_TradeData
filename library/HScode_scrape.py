@@ -7,6 +7,36 @@ import os
 from io import StringIO
 
 
+
+def generate_customs_urls(year, month, No_range):
+    urls = []
+    for No in No_range:
+        # 77類は存在しないのでスキップ
+        if No == 77:
+            continue
+        if year>=2022:
+            url = f'https://www.customs.go.jp/yusyutu/{year:04d}_{month:02d}_01/data/print_j_{No:02d}.htm'
+        elif year>=2020:
+            if month==4:
+                url = f'https://www.customs.go.jp/yusyutu/{year:04d}_{month:1d}/data/print_j_{No:02d}.htm'
+            else:
+                url = f'https://www.customs.go.jp/yusyutu/{year:04d}_1/data/print_j_{No:02d}.htm'
+        elif year>=2017:
+            if month==4:
+                url = f'https://www.customs.go.jp/yusyutu/{year:04d}_{month:1d}/data/print_j_{No:02d}.htm'
+            else:
+                url = f'https://www.customs.go.jp/yusyutu/{year:04d}/data/print_j_{No:02d}.htm'
+        elif year>=2016:
+                url = f'https://www.customs.go.jp/yusyutu/{year:04d}/data/print_j_{No:02d}.htm'
+        elif year>=2010:
+                url = f'https://www.customs.go.jp/yusyutu/{year:04d}/data/print_e{year:04d}01j_{No:02d}.htm'
+        else:
+            raise ValueError('2010年度未満は未対応です')
+            break
+        urls.append(url)
+        return urls
+
+
 def scrape_and_process_data(url):
     # リクエストを送信
     response = requests.get(url)
@@ -289,4 +319,20 @@ def add_flg(df_subset):
     df_subset.loc[:, '項目'] = df_subset.apply(lambda row: row[item_column_name] if len(row[item_column_name]) - len(row[item_column_name].lstrip('－')) == 5 else None, axis=1)
     df_subset.loc[:, 'HSコード'] = (df_subset['HSコード_大']+df_subset['HSコード_小']).str.replace('.', '')
     return df_subset
+
+
+def fetch_and_concat_data(urls):
+    dfs = []
+    for url in urls:
+        print(url)
+        if url.endswith('80.htm'):
+            df = HS_code_master_80(url)
+        elif url.endswith('72.htm'):
+            df = HS_code_master_72(url)
+        else:
+            df = HS_code_master(url)
+        dfs.append(df)
+    
+    result_df = pd.concat(dfs, ignore_index=True)
+    return result_df
 
