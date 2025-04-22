@@ -5,6 +5,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import os
 from io import StringIO
+from datetime import datetime
 
 
 
@@ -337,3 +338,53 @@ def fetch_and_concat_data(urls):
     result_df = pd.concat(dfs, ignore_index=True)
     return result_df
 
+
+def validate_and_log_hs_dataframe(result_df: pd.DataFrame, year, log_dir: str = './reference_master/HS_master/log', filename_prefix: str = 'hs_check_log') -> pd.DataFrame:
+    check_data = []
+
+    # 欠損値チェック
+    for column in result_df.columns:
+        check_data.append({
+            '列': column,
+            'チェック項目': '欠損値',
+            '数': result_df[column].isnull().sum()
+        })
+
+    # '-'の数チェック
+    columns_to_check_dash = {'中項目': 1, '小項目': 2, '細項目': 3, '微細項目': 4, '項目': 5}
+    for col, i_value in columns_to_check_dash.items():
+        check_data.append({
+            '列': col,
+            'チェック項目': f'-が{i_value}つではない',
+            '数': result_df[col].map(lambda x: isinstance(x, str) and len(x) - len(x.lstrip('－')) != i_value).sum()
+        })
+
+    # HSコード桁数チェック（9桁）
+    if 'HSコード' in result_df.columns:
+        check_data.append({
+            '列': 'HSコード',
+            'チェック項目': '桁数が9桁ではない',
+            '数': len(result_df[~result_df['HSコード'].astype(str).str.match(r'^\d{9}$')])
+        })
+
+    # データ間抜けチェック（階層構造の飛び）
+    columns_hierarchy = ['大項目', '中項目', '小項目', '細項目', '微細項目', '項目']
+    for i, col in enumerate(columns_hierarchy[:-1]):
+        check_data.append({
+            '列': col,
+            'チェック項目': 'データ間抜け',
+            '数': len(result_df[result_df[col].isnull() & result_df[columns_hierarchy[i + 1:]].notnull().any(axis=1)])
+        })
+
+    # DataFrameへ変換
+    check_df = pd.DataFrame(check_data)
+
+    # ログ保存処理
+    os.makedirs(log_dir, exist_ok=True)
+    today = datetime.now().strftime('%Y-%m-%d')
+    log_filename = f'{filename_prefix}_{year}_{today}.csv'
+    log_path = os.path.join(log_dir, log_filename)
+    check_df.to_csv(log_path, index=False, encoding='utf-8-sig')
+
+    print(f'✅ 検査ログを保存しました: {log_path}')
+    return check_df
