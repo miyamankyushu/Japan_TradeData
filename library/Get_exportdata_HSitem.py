@@ -7,7 +7,7 @@ from io import StringIO
 
 
 
-def get_data(statdataID, startPosition, cat02,year):
+def get_data(statdataID, startPosition, cat02,year,api_key):
     url = 'http://api.e-stat.go.jp/rest/3.0/app/getSimpleStatsData'
     params = {
         'appId': api_key,
@@ -36,6 +36,8 @@ def get_data(statdataID, startPosition, cat02,year):
     return df, next_startPosition
 
 
+
+
 def run_trade_data_pipeline(hs_counter_df, trade_counter_df, nation_df,m_q_list,api_key):
     # セルの実行開始時刻を記録
     start_time = datetime.now()
@@ -52,7 +54,7 @@ def run_trade_data_pipeline(hs_counter_df, trade_counter_df, nation_df,m_q_list,
         startPosition = 1  # init
         # 10万件未満⇒next_startPosition = 1
         # 10万件以上⇒next_startPosition > 1
-        df, next_startPosition = get_data(statdataID, startPosition,cat02_list,year)
+        df, next_startPosition = get_data(statdataID, startPosition,cat02_list,year,api_key)
         if df.columns[0]=='RESULT':
             syutoku_data+=len(df)
             print(' - - 取得完了:',syutoku_data,'行')
@@ -60,19 +62,20 @@ def run_trade_data_pipeline(hs_counter_df, trade_counter_df, nation_df,m_q_list,
         all_dfs.append(df)
 
         # 1回のAPI呼び出しあたり10万件未満(next_startPosition=1)になるまで取得し続ける.
+        """""
         while int(next_startPosition) > 1:
             syutoku_data+=len(df)
             print(' - - 取得完了:',syutoku_data,'行')
-            df, next_startPosition = get_data(statdataID, next_startPosition,cat02_list,year)
+            df, next_startPosition = get_data(statdataID, next_startPosition,cat02_list,year,api_key)
             all_dfs.append(df)
         syutoku_data+=len(df)
         print(' - - 取得完了:',syutoku_data,'行')
+        """
 
 
         final_df = pd.concat(all_dfs, ignore_index=True)
         del all_dfs
         # '国' 列のデータから '_' より右の国名だけを取得
-        print(len(final_df))
         final_df['国'] = final_df['国'].str.split('_').str[1]
         # '統計品目表の数量・金額' 列のデータから '_' より右のフラグだけを取得
         final_df['数量・金額'] = final_df['統計品目表の数量・金額'].str.split('_').str[1]
@@ -97,7 +100,7 @@ def run_trade_data_pipeline(hs_counter_df, trade_counter_df, nation_df,m_q_list,
         print(len(final_df),len(final_df_q))
         del final_df_q,final_df_m
 
-        HS_master=pd.read_csv(f'./reference_master/HS_master/HSコードマスタ_{year}.csv')
+        HS_master=pd.read_csv(f'reference_master/HS_master/HSコードマスタ_{year}.csv')
         merged_df = pd.merge(final_df, HS_master, left_on='cat01_code', right_on='HSコード', how='left')
         print(len(merged_df))
         merged_df=pd.merge(merged_df, nation_df, left_on='国', right_on='国', how='left')
