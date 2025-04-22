@@ -59,15 +59,15 @@ class TradeDataPipeline:
         df['数量・金額'] = df['統計品目表の数量・金額'].str.split('_').str[1]
         df['月'] = df['統計品目表の数量・金額'].str.split('_').str[0]
 
-        q_cols = ['時間軸(年次)', 'cat01_code', '統計品目表の数量・金額', '税関', '国', '数量・金額', 'value']
-        m_cols = ['時間軸(年次)', 'cat01_code', '統計品目表の数量・金額', '税関', '国', 'unit', '数量・金額', 'value']
+        q_cols = ['時間軸(年次)', 'cat01_code', '月', '税関', '国', '数量・金額', 'value']
+        m_cols = ['時間軸(年次)', 'cat01_code', '月', '税関', '国', 'unit', '数量・金額', 'value']
 
         df_q = df[df['数量・金額'] == '数量2'][q_cols].rename(columns={'value': '数量'})
         df_m = df[df['数量・金額'] == '金額'][m_cols].rename(columns={'value': '金額'})
 
         df_final = pd.merge(
             df_m, df_q,
-            on=['cat01_code', '統計品目表の数量・金額', '税関', '国', '時間軸(年次)'],
+            on=['cat01_code', '月', '税関', '国', '時間軸(年次)'],
             how='inner'
         )
         return df_final
@@ -80,13 +80,12 @@ class TradeDataPipeline:
         df = pd.merge(df, self.nation_df, on='国', how='left')
 
         df = df[[
-            '地域', '国', '時間軸(年次)', '統計品目表の数量・金額', '税関', '部数', '部名',
+            '地域', '国', '時間軸(年次)', '月', '税関', '部数', '部名',
             '類数', '類名', 'HSコード', '大項目', '中項目', '小項目', '細項目', '微細項目', '項目',
             '金額', 'unit', '数量', '単位2'
         ]]
         return df.rename(columns={
             '時間軸(年次)': '年',
-            '統計品目表の数量・金額': '月',
             '単位2': '数量単位',
             'unit': '金額単位'
         })
