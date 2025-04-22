@@ -49,9 +49,9 @@ class TradeDataPipeline:
             print(' - - 結果なし')
             return pd.DataFrame()
         all_dfs.append(df)
-        #while int(next_startPosition) > 1:
-            #df, next_startPosition = self.get_data(statdataID, next_startPosition, self.m_q_list, year)
-            #all_dfs.append(df)
+        while int(next_startPosition) > 1:
+            df, next_startPosition = self.get_data(statdataID, next_startPosition, self.m_q_list, year)
+            all_dfs.append(df)
         return pd.concat(all_dfs, ignore_index=True)
 
     def process_dataframe(self, df):
