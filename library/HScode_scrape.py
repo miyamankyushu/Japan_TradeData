@@ -382,7 +382,7 @@ def validate_and_log_hs_dataframe(result_df: pd.DataFrame, year, log_dir: str = 
     # ログ保存処理
     os.makedirs(log_dir, exist_ok=True)
     today = datetime.now().strftime('%Y-%m-%d')
-    log_filename = f'{filename_prefix}_{year}_{today}.csv'
+    log_filename = f'{today}_{filename_prefix}_{year}.csv'
     log_path = os.path.join(log_dir, log_filename)
     check_df.to_csv(log_path, index=False, encoding='utf-8-sig')
 
