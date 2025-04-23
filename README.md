@@ -8,11 +8,11 @@
 
 ## 🔍 主な特徴
 
-- **HSコード（品目分類）の階層マスタ自動生成**（スクレイピング）
-- **e-Stat API からの月次貿易統計データ取得**（指定された月・年・分類で）
-- **部類/類/項目レベルでのマスタ統合**
-- **国別・税関別に分類された取引データをCSVで出力**
-- **品質検査（欠損値、構造欠落、桁数チェック）付き**
+- HSコード（品目分類）の階層マスタ自動生成（スクレイピング）
+- e-Stat API からの月次貿易統計データ取得（指定された月・年・分類で）
+- 部類/類/項目レベルでのマスタ統合
+- 国別・税関別に分類された取引データをCSVで出力
+- 品質検査（欠損値、構造欠落、桁数チェック）付き
 
 ---
 
@@ -47,15 +47,40 @@ urls = generate_customs_urls(2024, 1, range(1, 98))  # 年・月・部類番号�
 df = fetch_and_concat_data(urls)
 validate_and_log_hs_dataframe(df, 2024)
 df.to_csv('./reference_master/HS_master/HSコードマスタ_2024.csv', index=False, encoding='utf-8')
----
-
-## 🌐 APIキーについて
-[e-Stat API](https://www.e-stat.go.jp/)に登録し、以下のようにAPIキーを設定してください：
-```python
-api_key = "あなたのAPIキー"
 ```
 
----
+### 2. 貿易統計データの取得（get_export_data_HSitem.py）
+```python
+from library.get_export_data_HSitem import TradeDataPipeline
+import pandas as pd
+
+# 各種CSVデータを読み込み
+hs_df = pd.read_csv('...')  # HS分類指定データ
+stat_df = pd.read_csv('...')  # e-StatのID対応データ
+nation_df = pd.read_csv('...')  # 国名変換マスタ
+
+pipeline = TradeDataPipeline(hs_df, stat_df, nation_df, '01', 'YOUR_API_KEY')
+pipeline.run()
+```
+
+## 💾 出力結果
+出力フォルダ：./Output/HS_item/
+
+出力ファイル名例：
+2024_01_税関別_20250423.csv
+
+カラム例：
+```bash
+['地域', '国', '年', '月', '税関', '部数', '部名', '類数', '類名', 'HSコード',
+ '大項目', '中項目', '小項目', '細項目', '微細項目', '項目', '金額', '金額単位', '数量', '数量単位']
+```
+
+## ⚠️ 注意事項
+
+- HAPIキーが必要です：e-Stat API（https://www.e-stat.go.jp/api）の利用申請を行い、`YOUR_API_KEY`を取得してください。
+- reference_master/ 以下のCSVが必要です：分類、マスタ、国名変換などはローカルに格納されたCSVを前提としていますが、これらは私が作成しているものです。適宜ご変更ください。
+- 年・月・分類によっては対応していない可能性があります（税関のHTML構造変化やAPI仕様による）。
+
 
 ## 📂 .gitignore の活用例
 以下を`.gitignore`に追加することで、不要な大容量ファイルのGit追跡を防げます：
@@ -68,15 +93,9 @@ debug/*.csv
 ---
 
 ## 📝 作成者
-開発者：渡利 広希（Hiroki Watari）
+Hiroki Watari（渡利 広希）
+データサイエンティスト / データエンジニア
 
 このプロジェクトは個人・企業問わず自由にカスタマイズ可能です。
 ForkやIssue歓迎します！
-
----
-
-## 🚀 今後の展望（To Do）
-- [ ] コマンドライン対応（CLI）
-- [ ] データ可視化ダッシュボードの追加
-- [ ] 年度一括バッチ処理の強化
 
