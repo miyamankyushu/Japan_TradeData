@@ -40,6 +40,7 @@ JAPAN_TRADEDATA/
 ## 🛠 使用方法
 
 ### 1. HSコードマスタの生成（`HScode_scrape.py`）
+HS品目マスタのスクレイピング・データ加工を2010年～2025年まで行うコードです。取得結果はすでに`reference_master\HS_master`に格納済みです。
 ```python
 from library.hscode_scrape import (generate_customs_urls,fetch_and_concat_data,validate_and_log_hs_dataframe)
 #年・月・部類番号の指定
@@ -54,6 +55,7 @@ df.to_csv(f'./reference_master/HS_master/HSコードマスタ_{year:04d}.csv', e
 ```
 
 ### 2. 貿易統計データの取得（get_export_data_HSitem.py）
+税関別・HS品目別・国別に輸出量のデータを取得し、HSマスタと紐づけ等の処理を行い整備したデータをOutput`フォルダに格納します。
 注意事項： APIキーが必要です
 ([e-Stat API](https://www.e-stat.go.jp/api))の利用申請を行い、ご自身の`YOUR_API_KEY`を取得してください。
 ```python
