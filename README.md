@@ -37,20 +37,16 @@ JAPAN_TRADEDATA/
 
 ---
 
-## ⚡ クイックスタート
+## 🛠 使用方法
 
-### 1. 必要なライブラリのインストール
-```bash
-pip install pandas requests openpyxl
-```
+### 1. HSコードマスタの生成（`HScode_scrape.py`）
+```python
+from library.HScode_scrape import generate_customs_urls, fetch_and_concat_data, validate_and_log_hs_dataframe
 
-### 2. Jupyter Notebookで実行
-`HSCode_scraping.ipynb` を開いて順に実行してください：
-
-- HSコードマスタの取得
-- バリデーションと保存
-- TradeDataPipelineによるデータ取得処理
-
+urls = generate_customs_urls(2024, 1, range(1, 98))  # 年・月・部類番号の範囲
+df = fetch_and_concat_data(urls)
+validate_and_log_hs_dataframe(df, 2024)
+df.to_csv('./reference_master/HS_master/HSコードマスタ_2024.csv', index=False, encoding='utf-8')
 ---
 
 ## 🌐 APIキーについて
