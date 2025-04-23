@@ -33,33 +33,63 @@ JAPAN_TRADEDATA/
 ├── README.md
 ├── MIT License
 ├── requirment
-└── HSCode_scraping.ipynb             # ノートブック実行インターフェース
+└── execute_HSCode_pipeline.ipynb             # ノートブック実行インターフェース
 ```
 
 ---
 ## 🛠 使用方法
 
 ### 1. HSコードマスタの生成（`HScode_scrape.py`）
+HS品目マスタのスクレイピング・データ加工を2010年～2025年まで行うコードです。取得結果はすでに`reference_master\HS_master`に格納済みです。
 ```python
-from library.HScode_scrape import generate_customs_urls, fetch_and_concat_data, validate_and_log_hs_dataframe
+from library.hscode_scrape import (
+    generate_customs_urls,
+    fetch_and_concat_data,
+    validate_and_log_hs_dataframe
+)
 
-urls = generate_customs_urls(2024, 1, range(1, 98))  # 年・月・部類番号の範囲
+# Specify the year, month, and item category number range
+year, month = 2010, 1               # Year and month (single month)
+category_range = range(1, 98)       # HS category numbers (1–97; 77 skipped internally)
+
+# Run HS code scraping
+urls = generate_customs_urls(year, month, category_range)
 df = fetch_and_concat_data(urls)
-validate_and_log_hs_dataframe(df, 2024)
-df.to_csv('./reference_master/HS_master/HSコードマスタ_2024.csv', index=False, encoding='utf-8')
+
+# Run validation and generate log
+log_df = validate_and_log_hs_dataframe(df, year)
+
+# Save as CSV
+df.to_csv(f'./reference_master/HS_master/HSCode_Master_{year:04d}.csv', encoding='utf-8', index=False)
+
 ```
 
 ### 2. 貿易統計データの取得（get_export_data_HSitem.py）
+税関別・HS品目別・国別に輸出量のデータを取得し、HSマスタと紐づけ等の処理を行い整備したデータを`Output`フォルダに格納します。
+
+注意事項： APIキーが必要です
+([e-Stat API](https://www.e-stat.go.jp/api))の利用申請を行い、ご自身の`YOUR_API_KEY`を取得してください。
 ```python
 from library.get_export_data_HSitem import TradeDataPipeline
 import pandas as pd
 
-# 各種CSVデータを読み込み
-hs_df = pd.read_csv('...')  # HS分類指定データ
-stat_df = pd.read_csv('...')  # e-StatのID対応データ
-nation_df = pd.read_csv('...')  # 国名変換マスタ
+# Specify the type, year, and month
+item_type = 'HS'  # HS (Harmonized System) item-based classification
+year, month = 2024, '01'  # Year and month (single specification)
+api_key = "***************"  # Replace with your own API key
 
-pipeline = TradeDataPipeline(hs_df, stat_df, nation_df, '01', 'YOUR_API_KEY')
+# Load trade statistics master and extract target data
+trade_counter_df = pd.read_excel('./reference_master/counter/trade_stat_mapping.xlsx', dtype=str)
+hs_counter_df = trade_counter_df[
+    (trade_counter_df['分類'] == item_type) & 
+    (trade_counter_df['year'].astype(int) == year)
+].reset_index(drop=True)
+
+# Load country/region master
+nation_df = pd.read_excel('./reference_master/area/nation.xlsx', dtype=str)
+
+# Execute the trade data pipeline
+pipeline = TradeDataPipeline(hs_counter_df, trade_counter_df, nation_df, month, api_key)
 pipeline.run()
 ```
 ---
@@ -77,9 +107,9 @@ pipeline.run()
 ---
 ## ⚠️ 注意事項
 
-- HAPIキーが必要です：e-Stat API（https://www.e-stat.go.jp/api）の利用申請を行い、`YOUR_API_KEY`を取得してください。
-- reference_master/ 以下のCSVが必要です：分類、マスタ、国名変換などはローカルに格納されたCSVを前提としていますが、これらは私が作成しているものです。適宜ご変更ください。
-- 年・月・分類によっては対応していない可能性があります（税関のHTML構造変化やAPI仕様による）。
+- （再掲）APIキーが必要です([e-Stat API](https://www.e-stat.go.jp/api))の利用申請を行い、ご自身の`YOUR_API_KEY`を取得してください。
+- reference_master/ 以下に国名、e-stats APIコード、分類などのマスタを格納していますが、これらは私が作成しているものです。適宜ご変更ください。
+- 現状ほとんど確認されませんが、年・月・分類によっては対応していない可能性があります（税関のHTML構造変化やAPI仕様による）。
 
 
 
@@ -113,19 +143,20 @@ This project is a set of Python scripts for automatically collecting, processing
 
 ```
 JAPAN_TRADEDATA/
-├── library/                          # Pythonモジュール群
-│   ├── get_export_data_HSitem.py     # TradeDataPipelineクラス
-│   ├── HScode_scrape.py              # HSコード取得ロジック
-├── reference_master/                # マスタデータ類
-│   ├── area/nation.xlsx              # 国・地域マスタ
-│   ├── counter/貿易統計_対応表.xlsx     # API情報対応表
-│   ├── HS_master/                    # HSコードマスタとログ
-│   └── cat02_master.json            # 月別コード定義
-├── Output/                          # 出力されたCSVファイル
-├── debug/                           # 一時的な検証出力
+├── library/                          # Python modules
+│   ├── get_export_data_HSitem.py     # TradeDataPipeline class
+│   ├── hscode_scrape.py              # HS code scraping logic
+├── reference_master/                 # Master data
+│   ├── area/nation.xlsx              # Country/Region master
+│   ├── counter/trade_stat_mapping.xlsx  # API info mapping table
+│   ├── HS_master/                    # HS code master and logs
+│   └── e-stat/month.json             # Monthly code definitions
+├── Output/                           # Exported CSV files
 ├── .gitignore
 ├── README.md
-└── HSCode_scraping.ipynb            # ノートブック実行インターフェース
+├── MIT License
+├── requirement                       # Required Python libraries
+└── execute_HSCode_pipeline.ipynb     # execute
 ```
 
 ---
@@ -133,12 +164,26 @@ JAPAN_TRADEDATA/
 
 ### 1. Generate the HS Code Master (`HScode_scrape.py`)
 ```python
-from library.HScode_scrape import generate_customs_urls, fetch_and_concat_data, validate_and_log_hs_dataframe
+from library.hscode_scrape import (
+    generate_customs_urls,
+    fetch_and_concat_data,
+    validate_and_log_hs_dataframe
+)
 
-urls = generate_customs_urls(2024, 1, range(1, 98))  Specify year, month, and section range
+# Specify the year, month, and item category number range
+year, month = 2010, 1               # Year and month (single month)
+category_range = range(1, 98)       # HS category numbers (1–97; 77 skipped internally)
+
+# Run HS code scraping
+urls = generate_customs_urls(year, month, category_range)
 df = fetch_and_concat_data(urls)
-validate_and_log_hs_dataframe(df, 2024)
-df.to_csv('./reference_master/HS_master/HSコードマスタ_2024.csv', index=False, encoding='utf-8')
+
+# Run validation and generate log
+log_df = validate_and_log_hs_dataframe(df, year)
+
+# Save as CSV
+df.to_csv(f'./reference_master/HS_master/HSCode_Master_{year:04d}.csv', encoding='utf-8', index=False)
+
 ```
 
 ### 2. Retrieve Trade Statistics Data (get_export_data_HSitem.py)
@@ -146,12 +191,23 @@ df.to_csv('./reference_master/HS_master/HSコードマスタ_2024.csv', index=Fa
 from library.get_export_data_HSitem import TradeDataPipeline
 import pandas as pd
 
-# Load master files
-hs_df = pd.read_csv('...')  # HS classification settings
-stat_df = pd.read_csv('...')  # e-Stat statID mapping
-nation_df = pd.read_csv('...')  # Country name mapping
+# Specify the type, year, and month
+item_type = 'HS'  # HS (Harmonized System) item-based classification
+year, month = 2024, '01'  # Year and month (single specification)
+api_key = "***************"  # Replace with your own API key
 
-pipeline = TradeDataPipeline(hs_df, stat_df, nation_df, '01', 'YOUR_API_KEY')
+# Load trade statistics master and extract target data
+trade_counter_df = pd.read_excel('./reference_master/counter/trade_stat_mapping.xlsx', dtype=str)
+hs_counter_df = trade_counter_df[
+    (trade_counter_df['分類'] == item_type) & 
+    (trade_counter_df['year'].astype(int) == year)
+].reset_index(drop=True)
+
+# Load country/region master
+nation_df = pd.read_excel('./reference_master/area/nation.xlsx', dtype=str)
+
+# Execute the trade data pipeline
+pipeline = TradeDataPipeline(hs_counter_df, trade_counter_df, nation_df, month, api_key)
 pipeline.run()
 ```
 ---
