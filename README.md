@@ -29,7 +29,6 @@ JAPAN_TRADEDATA/
 │   ├── HS_master/                    # HSコードマスタとログ
 │   └── e-stat/month.json             # 月別コード定義
 ├── Output/                           # 出力されたCSVファイル
-├── debug/                            # 一時的な検証出力
 ├── .gitignore
 ├── README.md
 ├── MIT License
