@@ -1,4 +1,4 @@
-# 日本貿易統計データ自動取得パイプライン（HScode） 🌏
+# 🌏日本貿易統計データ取得パイプライン（HScode）
 このプロジェクトは、日本の政府統計（[e-Stat API](https://www.e-stat.go.jp/stat-search/files?page=1&toukei=00350300&tstat=000001013143)）および税関の輸出統計品目表([HP](https://www.customs.go.jp/yusyutu/index.htm))
 を活用し、HSコード別の貿易統計データを自動で収集・加工・保存するためのPythonスクリプト群です。]
 
