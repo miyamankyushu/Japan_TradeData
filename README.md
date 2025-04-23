@@ -41,12 +41,16 @@ JAPAN_TRADEDATA/
 
 ### 1. HSコードマスタの生成（`HScode_scrape.py`）
 ```python
-from library.HScode_scrape import generate_customs_urls, fetch_and_concat_data, validate_and_log_hs_dataframe
-
-urls = generate_customs_urls(2024, 1, range(1, 98))  # 年・月・部類番号の範囲
+from library.hscode_scrape import (generate_customs_urls,fetch_and_concat_data,validate_and_log_hs_dataframe)
+#年・月・部類番号の指定
+year, month = 2010, 1    # 年・月（※単一指定）
+num_range = range(1, 98) # 部類番号（※範囲指定）
+# HSコードのスクレイピング実行
+urls = generate_customs_urls(year, month, num_range)
 df = fetch_and_concat_data(urls)
-validate_and_log_hs_dataframe(df, 2024)
-df.to_csv('./reference_master/HS_master/HSコードマスタ_2024.csv', index=False, encoding='utf-8')
+log_df = validate_and_log_hs_dataframe(df, year) #バリデーションlogファイル作成
+# CSVで保存
+df.to_csv(f'./reference_master/HS_master/HSコードマスタ_{year:04d}.csv', encoding='utf-8', index=False)
 ```
 
 ### 2. 貿易統計データの取得（get_export_data_HSitem.py）
