@@ -55,7 +55,7 @@ df.to_csv(f'./reference_master/HS_master/HSコードマスタ_{year:04d}.csv', e
 
 ### 2. 貿易統計データの取得（get_export_data_HSitem.py）
 注意事項： APIキーが必要です
-e-Stat API（https://www.e-stat.go.jp/api）の利用申請を行い、ご自身の`YOUR_API_KEY`を取得してください。
+e-Stat API(https://www.e-stat.go.jp/api)の利用申請を行い、ご自身の`YOUR_API_KEY`を取得してください。
 ```python
 from library.get_export_data_HSitem import TradeDataPipeline
 import pandas as pd
