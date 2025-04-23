@@ -89,3 +89,101 @@ Hiroki Watari（渡利 広希）
 このプロジェクトは個人・企業問わず自由にカスタマイズ可能です。
 ForkやIssue歓迎します！
 
+
+# Japan Trade Statistics Auto-Collection Pipeline 🌏
+This project is a set of Python scripts for automatically collecting, processing, and saving Japan’s trade statistics data by HS code. It utilizes the **e-Stat API** (provided by the Japanese government) and **web scraping of Japan Customs pages**.
+
+
+
+---
+
+## 🔍 Key Features
+
+- Automatically generates a hierarchical master of HS codes (via web scraping)
+- Retrieves monthly trade statistics from the e-Stat API (by year/month/category)
+- Merges and enriches data with HS classification hierarchy
+- Outputs transaction data classified by country and customs office in CSV format
+- Includes data validation features (missing values, structure gaps, digit checks)
+
+---
+
+## 📊 Project Structure
+
+```
+JAPAN_TRADEDATA/
+├── library/                          # Pythonモジュール群
+│   ├── get_export_data_HSitem.py     # TradeDataPipelineクラス
+│   ├── HScode_scrape.py              # HSコード取得ロジック
+├── reference_master/                # マスタデータ類
+│   ├── area/nation.xlsx              # 国・地域マスタ
+│   ├── counter/貿易統計_対応表.xlsx     # API情報対応表
+│   ├── HS_master/                    # HSコードマスタとログ
+│   └── cat02_master.json            # 月別コード定義
+├── Output/                          # 出力されたCSVファイル
+├── debug/                           # 一時的な検証出力
+├── .gitignore
+├── README.md
+└── HSCode_scraping.ipynb            # ノートブック実行インターフェース
+```
+
+---
+## 🛠 How to Use
+
+### 1. Generate the HS Code Master (`HScode_scrape.py`)
+```python
+from library.HScode_scrape import generate_customs_urls, fetch_and_concat_data, validate_and_log_hs_dataframe
+
+urls = generate_customs_urls(2024, 1, range(1, 98))  Specify year, month, and section range
+df = fetch_and_concat_data(urls)
+validate_and_log_hs_dataframe(df, 2024)
+df.to_csv('./reference_master/HS_master/HSコードマスタ_2024.csv', index=False, encoding='utf-8')
+```
+
+### 2. Retrieve Trade Statistics Data (get_export_data_HSitem.py)
+```python
+from library.get_export_data_HSitem import TradeDataPipeline
+import pandas as pd
+
+# Load master files
+hs_df = pd.read_csv('...')  # HS classification settings
+stat_df = pd.read_csv('...')  # e-Stat statID mapping
+nation_df = pd.read_csv('...')  # Country name mapping
+
+pipeline = TradeDataPipeline(hs_df, stat_df, nation_df, '01', 'YOUR_API_KEY')
+pipeline.run()
+```
+---
+## 💾 Output
+Output folder: ./Output/HS_item/
+
+Example output filename: 2024_01_by_customs_20250423.csv
+
+Sample columns:
+```bash
+['Region', 'Country', 'Year', 'Month', 'Customs', 'Section No', 'Section Name',
+ 'Category No', 'Category Name', 'HS Code', 'Main Item', 'Sub Item 1', 'Sub Item 2',
+ 'Sub Item 3', 'Sub Item 4', 'Item', 'Amount', 'Amount Unit', 'Quantity', 'Quantity Unit']
+
+```
+---
+## ⚠️ Notes
+
+API key is required
+You must apply for and obtain an API key from the e-Stat API.
+
+You need CSV files under reference_master/
+These include classification definitions, statID mappings, and country mappings.
+These are custom-created and may need to be adjusted for your use.
+
+Some years or classifications may not be supported
+This is due to changes in HTML structure of customs pages or limitations of the e-Stat API.
+
+
+
+---
+## 📝 Author
+Hiroki Watari
+Data Scientist / Data Engineer
+
+This project is open for customization and free to use for both personal and business purposes.
+Forks, Issues, and Pull Requests are very welcome!
