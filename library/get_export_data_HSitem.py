@@ -12,22 +12,23 @@ with open('reference_master/e-stat/month.json', 'r', encoding='utf-8') as f:
     cat02_by_month = json.load(f)
 
 class TradeDataPipeline:
-    def __init__(self, hs_counter_df, trade_counter_df, nation_df, month, api_key):
+    def __init__(self, hs_counter_df, trade_counter_df, nation_df, year, month, api_key):
         self.hs_counter_df = hs_counter_df
         self.trade_counter_df = trade_counter_df
         self.nation_df = nation_df
+        self.year  = year
         self.month = month
         self.api_key = api_key
         self.cat02_by_month = cat02_by_month  # ← ここで渡す
         self.start_time = datetime.now()
         print("✅ 初期化完了: 取得開始")
 
-    def get_cat02_by_month(self, month):
-        return self.cat02_by_month.get(month.zfill(2))
+    def get_cat02_by_month(self):
+        return self.cat02_by_month.get(self.month.zfill(2))
 
-    def get_data(self, statdataID, startPosition, month, year):
+    def get_data(self, statdataID, startPosition):
         url = 'http://api.e-stat.go.jp/rest/3.0/app/getSimpleStatsData'
-        cat02 = self.get_cat02_by_month(month)
+        cat02 = self.get_cat02_by_month()
         params = {
             'appId': self.api_key,
             'lang': 'J',
@@ -41,7 +42,7 @@ class TradeDataPipeline:
             'limit': '100000',
             'startPosition': str(startPosition),
             'cdCat02': cat02,
-            'cdTime': str(year) + '000000'
+            'cdTime': str(self.year) + '000000'
         }
         response = requests.get(url, params=params).text
         i_NEXT_KEY = response.find('"NEXT_KEY"')
@@ -52,16 +53,16 @@ class TradeDataPipeline:
         df = pd.read_csv(StringIO(response[response.find('"VALUE"') + len('"VALUE"'):]), dtype=str)
         return df, next_startPosition
 
-    def fetch_all_data(self, statdataID, year):
+    def fetch_all_data(self, statdataID):
         all_dfs = []
         startPosition = 1
-        df, next_startPosition = self.get_data(statdataID, startPosition, self.month, year)
+        df, next_startPosition = self.get_data(statdataID, startPosition)
         if df.columns[0] == 'RESULT':
             print(' - - 結果なし')
             return pd.DataFrame()
         all_dfs.append(df)
         while int(next_startPosition) > 1:
-            df, next_startPosition = self.get_data(statdataID, next_startPosition, self.month, year)
+            df, next_startPosition = self.get_data(statdataID, next_startPosition)
             all_dfs.append(df)
         return pd.concat(all_dfs, ignore_index=True)
 
@@ -83,8 +84,8 @@ class TradeDataPipeline:
         )
         return df_final
 
-    def merge_with_master(self, df, year):
-        hs_path = f'reference_master/HS_master/HSコードマスタ_{year}.csv'
+    def merge_with_master(self, df):
+        hs_path = f'reference_master/HS_master/HSコードマスタ_{self.year}.csv'
         hs_master = pd.read_csv(hs_path, dtype=str)
         df = df[df['cat01_code'].astype(str).str.len() == 9]
         df = pd.merge(df, hs_master, left_on='cat01_code', right_on='HSコード', how='left')
@@ -102,25 +103,24 @@ class TradeDataPipeline:
             'cat01_code': 'HSコード',
         })
 
-    def save_csv(self, df, year):
+    def save_csv(self, df):
         date = datetime.now().strftime('%Y%m%d')
-        path = f'./Output/HS_item/{year}_{self.month}_税関別_{date}.csv'
+        path = f'./Output/HS_item/{self.year}_{self.month}_国別_税関別_HS品目別.csv'
         os.makedirs(os.path.dirname(path), exist_ok=True)
         df.to_csv(path, index=False, encoding='utf-8')
         print(f'📁 保存完了: {path}')
 
     def run(self):
         for i in range(len(self.hs_counter_df)):
-            print(f"▶️ 分類：{self.hs_counter_df['分類'][i]} {self.hs_counter_df['year'][i]}年 {self.month}月")
+            print(f"▶️ 分類：{self.hs_counter_df['分類'][i]} {self.year}年 {self.month}月")
             statdataID = self.trade_counter_df['statdataID'][i]
-            year = self.trade_counter_df['year'][i]
 
-            raw_df = self.fetch_all_data(statdataID, year)
+            raw_df = self.fetch_all_data(statdataID)
             if raw_df.empty:
                 continue
             processed_df = self.process_dataframe(raw_df)
-            merged_df = self.merge_with_master(processed_df, year)
-            self.save_csv(merged_df, year)
+            merged_df = self.merge_with_master(processed_df)
+            self.save_csv(merged_df)
 
         elapsed = datetime.now() - self.start_time
         minutes, seconds = divmod(int(elapsed.total_seconds()), 60)
