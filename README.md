@@ -22,17 +22,19 @@
 JAPAN_TRADEDATA/
 ├── library/                          # Pythonモジュール群
 │   ├── get_export_data_HSitem.py     # TradeDataPipelineクラス
-│   ├── HScode_scrape.py              # HSコード取得ロジック
-├── reference_master/                # マスタデータ類
+│   ├── hscode_scrape.py              # HSコード取得ロジック
+├── reference_master/                 # マスタデータ類
 │   ├── area/nation.xlsx              # 国・地域マスタ
-│   ├── counter/貿易統計_対応表.xlsx     # API情報対応表
+│   ├── counter/貿易統計_対応表.xlsx   # API情報対応表
 │   ├── HS_master/                    # HSコードマスタとログ
-│   └── cat02_master.json            # 月別コード定義
-├── Output/                          # 出力されたCSVファイル
-├── debug/                           # 一時的な検証出力
+│   └── e-stat/month.json             # 月別コード定義
+├── Output/                           # 出力されたCSVファイル
+├── debug/                            # 一時的な検証出力
 ├── .gitignore
 ├── README.md
-└── HSCode_scraping.ipynb            # ノートブック実行インターフェース
+├── MIT License
+├── requirment
+└── HSCode_scraping.ipynb             # ノートブック実行インターフェース
 ```
 
 ---
