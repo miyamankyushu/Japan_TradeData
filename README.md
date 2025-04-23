@@ -1,5 +1,4 @@
 # 日本貿易統計データ自動取得パイプライン 🌏
-
 このプロジェクトは、日本の政府統計（e-Stat API）および税関ウェブサイトを活用し、HSコード別の貿易統計データを自動で収集・加工・保存するためのPythonスクリプト群です。
 
 
@@ -36,7 +35,6 @@ JAPAN_TRADEDATA/
 ```
 
 ---
-
 ## 🛠 使用方法
 
 ### 1. HSコードマスタの生成（`HScode_scrape.py`）
@@ -62,7 +60,7 @@ nation_df = pd.read_csv('...')  # 国名変換マスタ
 pipeline = TradeDataPipeline(hs_df, stat_df, nation_df, '01', 'YOUR_API_KEY')
 pipeline.run()
 ```
-
+---
 ## 💾 出力結果
 出力フォルダ：./Output/HS_item/
 
@@ -74,7 +72,7 @@ pipeline.run()
 ['地域', '国', '年', '月', '税関', '部数', '部名', '類数', '類名', 'HSコード',
  '大項目', '中項目', '小項目', '細項目', '微細項目', '項目', '金額', '金額単位', '数量', '数量単位']
 ```
-
+---
 ## ⚠️ 注意事項
 
 - HAPIキーが必要です：e-Stat API（https://www.e-stat.go.jp/api）の利用申請を行い、`YOUR_API_KEY`を取得してください。
@@ -82,16 +80,8 @@ pipeline.run()
 - 年・月・分類によっては対応していない可能性があります（税関のHTML構造変化やAPI仕様による）。
 
 
-## 📂 .gitignore の活用例
-以下を`.gitignore`に追加することで、不要な大容量ファイルのGit追跡を防げます：
-```
-Output/*.csv
-reference_master/HS_master/log/*.csv
-debug/*.csv
-```
 
 ---
-
 ## 📝 作成者
 Hiroki Watari（渡利 広希）
 データサイエンティスト / データエンジニア
