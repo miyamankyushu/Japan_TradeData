@@ -90,7 +90,7 @@ pipeline.run()
 ---
 ## ⚠️ 注意事項
 
-- APIキーが必要です：e-Stat API（https://www.e-stat.go.jp/api）の利用申請を行い、`YOUR_API_KEY`を取得してください。
+- （再掲）APIキーが必要です([e-Stat API](https://www.e-stat.go.jp/api))の利用申請を行い、ご自身の`YOUR_API_KEY`を取得してください。
 - reference_master/ 以下のCSVが必要です：分類、マスタ、国名変換などはローカルに格納されたCSVを前提としていますが、これらは私が作成しているものです。適宜ご変更ください。
 - 年・月・分類によっては対応していない可能性があります（税関のHTML構造変化やAPI仕様による）。
 
