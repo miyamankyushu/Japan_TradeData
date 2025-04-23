@@ -1,5 +1,5 @@
 # 日本貿易統計データ自動取得パイプライン 🌏
-このプロジェクトは、日本の政府統計（[e-Stat API](https://www.e-stat.go.jp/stat-search/files?page=1&toukei=00350300&tstat=000001013143)）および([税関HP]https://www.customs.go.jp/yusyutu/index.htm)
+このプロジェクトは、日本の政府統計（[e-Stat API](https://www.e-stat.go.jp/stat-search/files?page=1&toukei=00350300&tstat=000001013143)）および([税関HP](https://www.customs.go.jp/yusyutu/index.htm))
 を活用し、HSコード別の貿易統計データを自動で収集・加工・保存するためのPythonスクリプト群です。]
 
 
