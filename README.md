@@ -43,7 +43,7 @@ JAPAN_TRADEDATA/
 ```python
 from library.hscode_scrape import (generate_customs_urls,fetch_and_concat_data,validate_and_log_hs_dataframe)
 #年・月・部類番号の指定
-year, month = 2010, 1    # 年・月（※単一指定）
+year, month = 2010, 1    # 年・月（※範囲指定）
 num_range = range(1, 98) # 部類番号（※範囲指定）
 # HSコードのスクレイピング実行
 urls = generate_customs_urls(year, month, num_range)
@@ -57,13 +57,17 @@ df.to_csv(f'./reference_master/HS_master/HSコードマスタ_{year:04d}.csv', e
 ```python
 from library.get_export_data_HSitem import TradeDataPipeline
 import pandas as pd
+#年・月・部類番号の指定
+syurui = 'HS'  # HS品目別
+year, month = 2024, '01' # 年・月（※単一指定）
+api_key = "***************" #ご自身で取得してください
 
-# 各種CSVデータを読み込み
-hs_df = pd.read_csv('...')  # HS分類指定データ
-stat_df = pd.read_csv('...')  # e-StatのID対応データ
-nation_df = pd.read_csv('...')  # 国名変換マスタ
+# 貿易統計マスタと対象データの抽出
+trade_counter_df = pd.read_excel('./reference_master/counter/貿易統計_対応表.xlsx', dtype=str)
+hs_counter_df = trade_counter_df[(trade_counter_df['分類'] == syurui) & (trade_counter_df['year'].astype(int) == year)].reset_index(drop=True)
 
-pipeline = TradeDataPipeline(hs_df, stat_df, nation_df, '01', 'YOUR_API_KEY')
+# パイプライン実行
+pipeline = TradeDataPipeline(hs_counter_df, trade_counter_df, nation_df, month, api_key)
 pipeline.run()
 ```
 ---
