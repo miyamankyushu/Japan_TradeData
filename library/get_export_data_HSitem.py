@@ -113,7 +113,7 @@ class TradeDataPipeline:
     def run(self):
         for i in range(len(self.hs_counter_df)):
             print(f"▶️ 分類：{self.hs_counter_df['分類'][i]} {self.year}年 {self.month}月")
-            statdataID = self.trade_counter_df['statdataID'][i]
+            statdataID = self.hs_counter_df['statdataID'][i]
 
             raw_df = self.fetch_all_data(statdataID)
             if raw_df.empty:
